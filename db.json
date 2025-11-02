@@ -1,0 +1,87 @@
+// --- डमी डेटाबेस (डेटा सीधे फ़ाइल के अंदर है) ---
+// यह डेटाबेस की तरह काम करेगा जिस पर सर्चिंग होगी।
+const database = [
+  {
+    "mobile": "9876543210",
+    "name": "Arun Kumar",
+    "address": "Flat 101, Sunshine Apartments, Delhi"
+  },
+  {
+    "mobile": "9988776655",
+    "name": "Priya Sharma",
+    "address": "House 45, Green Colony, Mumbai"
+  },
+  {
+    "mobile": "9012345678",
+    "name": "Rajesh Gupta",
+    "address": "Sector 14, B-Block, Pune"
+  },
+  {
+    "mobile": "7770001112",
+    "name": "Neha Verma",
+    "address": "Plot 5, Industrial Area, Bangalore"
+  }
+];
+
+// Netlify Function का मुख्य एंट्री पॉइंट
+exports.handler = async (event, context) => {
+  // Mobile number को URL query parameter से निकालना (उदाहरण: ?mobile=9876543210)
+  const mobileNumber = event.queryStringParameters.mobile;
+
+  // CORS headers: ताकि API हर जगह से एक्सेस हो सके
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*', // जरूरी है
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  // OPTIONS request को संभालना
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204, 
+      headers,
+      body: ''
+    };
+  }
+
+  // Input validation: अगर 'mobile' parameter नहीं दिया गया
+  if (!mobileNumber) {
+    return {
+      statusCode: 400, // Bad Request
+      headers,
+      body: JSON.stringify({
+        status: 'error',
+        message: 'Mobile number query parameter is required. Use: ?mobile=XXXXXXXXXX'
+      }),
+    };
+  }
+
+  // डेटाबेस में मोबाइल नंबर सर्च करना
+  const foundUser = database.find(user => user.mobile === mobileNumber);
+
+  // Response तय्यार करना
+  if (foundUser) {
+    // अगर user मिल गया (Success: 200 OK)
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        status: 'success',
+        query: mobileNumber,
+        data: foundUser
+      }),
+    };
+  } else {
+    // अगर user नहीं मिला (Not Found: 404)
+    return {
+      statusCode: 404,
+      headers,
+      body: JSON.stringify({
+        status: 'error',
+        query: mobileNumber,
+        message: `Mobile number ${mobileNumber} database में नहीं मिला।`
+      }),
+    };
+  }
+};
